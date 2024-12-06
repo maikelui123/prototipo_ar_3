@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <style>
+    .layer {
+      fill: #add8e6;
+      stroke: #000;
+      stroke-width: 2;
+    }
+    .layer-text {
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      fill: #000;
+      font-weight: bold;
+    }
+    .title {
+      font-family: Arial, sans-serif;
+      font-size: 32px;
+      fill: #000;
+      text-anchor: middle;
+    }
+  </style>
+
+  <!-- Título del diagrama -->
+  <text x="400" y="40" class="title">Computación en la Nube</text>
+
+  <!-- Nube -->
+  <g>
+    <ellipse cx="400" cy="120" rx="150" ry="50" fill="#e0e0e0" stroke="#000" stroke-width="2" />
+    <text x="400" y="125" text-anchor="middle" font-family="Arial" font-size="20" fill="#000">Internet / Cloud</text>
+  </g>
+
+  <!-- Flechas -->
+  <line x1="400" y1="170" x2="400" y2="200" stroke="#000" stroke-width="2" marker-end="url(#arrowhead)" />
+  <line x1="400" y1="330" x2="400" y2="360" stroke="#000" stroke-width="2" marker-end="url(#arrowhead)" />
+  <line x1="400" y1="490" x2="400" y2="520" stroke="#000" stroke-width="2" marker-end="url(#arrowhead)" />
+
+  <!-- Capa SaaS -->
+  <rect x="200" y="200" width="400" height="100" fill="#ccccff" stroke="#000" stroke-width="2" />
+  <text x="400" y="260" class="layer-text" text-anchor="middle">SaaS: Software as a Service</text>
+
+  <!-- Capa PaaS -->
+  <rect x="150" y="360" width="500" height="100" fill="#ccffcc" stroke="#000" stroke-width="2" />
+  <text x="400" y="420" class="layer-text" text-anchor="middle">PaaS: Platform as a Service</text>
+
+  <!-- Capa IaaS -->
+  <rect x="100" y="520" width="600" height="100" fill="#ffcccc" stroke="#000" stroke-width="2" />
+  <text x="400" y="580" class="layer-text" text-anchor="middle">IaaS: Infrastructure as a Service</text>
+
+  <!-- Definición del marcador de flecha -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#000" />
+    </marker>
+  </defs>
+</svg>

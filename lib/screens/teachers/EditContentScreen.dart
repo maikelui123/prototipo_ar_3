@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:lottie/lottie.dart';
 
 class EditContentScreen extends StatefulWidget {
   final String componentId;
@@ -125,8 +126,14 @@ class _EditContentScreenState extends State<EditContentScreen> {
     ThemeData theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editar Componente'),
+        title: Text('Editar Componente', style: TextStyle(color: Colors.white)),
         backgroundColor: darkBlue,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.save, color: Colors.white),
+            onPressed: _updateComponent,
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -142,16 +149,22 @@ class _EditContentScreenState extends State<EditContentScreen> {
             key: _formKey,
             child: Column(
               children: [
-                _buildTextField(theme, _nombreController, 'Nombre del componente'),
-                _buildTextField(theme, _descripcionController, 'Descripción'),
-                _buildTextField(theme, _informacionModeloController, 'Información del Modelo'),
-                _buildTextField(theme, _keywordsController, 'Palabras Clave (separadas por comas)'),
+                _buildTextField(theme, _nombreController, 'Nombre del componente', Icons.text_fields),
+                _buildTextField(theme, _descripcionController, 'Descripción', Icons.description),
+                _buildTextField(theme, _informacionModeloController, 'Información del Modelo', Icons.info),
+                _buildTextField(theme, _keywordsController, 'Palabras Clave (separadas por comas)', Icons.key),
                 SizedBox(height: 20),
-                _buildButton(theme, _pickImage, 'Seleccionar imagen para el componente'),
+                _imageFile != null
+                    ? Image.file(_imageFile!, fit: BoxFit.cover)
+                    : Container(),
+                _buildButton(theme, _pickImage, 'Seleccionar imagen para el componente', Icons.image),
                 SizedBox(height: 20),
-                _buildButton(theme, _pickModel, 'Seleccionar modelo 3D para el componente'),
+                _modelFile != null
+                    ? Text('Modelo 3D seleccionado: ${_modelFile!.path.split('/').last}', style: TextStyle(color: Colors.white))
+                    : Container(),
+                _buildButton(theme, _pickModel, 'Seleccionar modelo 3D para el componente', Icons.model_training),
                 SizedBox(height: 20),
-                _buildButton(theme, _updateComponent, 'Actualizar Componente', isPrimary: true),
+                Lottie.asset('assets/cubo.json', width: 200, height: 200),
               ],
             ),
           ),
@@ -160,7 +173,7 @@ class _EditContentScreenState extends State<EditContentScreen> {
     );
   }
 
-  Widget _buildTextField(ThemeData theme, TextEditingController controller, String label) {
+  Widget _buildTextField(ThemeData theme, TextEditingController controller, String label, IconData icon) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -172,6 +185,7 @@ class _EditContentScreenState extends State<EditContentScreen> {
           ),
           filled: true,
           fillColor: lightBlue.withAlpha(50),
+          prefixIcon: Icon(icon), // Agregado el ícono aquí
         ),
         validator: (value) {
           if (value == null || value.isEmpty) return 'Este campo es obligatorio';
@@ -182,13 +196,14 @@ class _EditContentScreenState extends State<EditContentScreen> {
     );
   }
 
-  Widget _buildButton(ThemeData theme, VoidCallback onPressed, String text, {bool isPrimary = false}) {
-    return ElevatedButton(
+  Widget _buildButton(ThemeData theme, VoidCallback onPressed, String text, IconData icon, {bool isPrimary = false}) {
+    return ElevatedButton.icon(
+      icon: Icon(icon), // Ícono para el botón
+      label: Text(text),
       onPressed: onPressed,
-      child: Text(text),
       style: ElevatedButton.styleFrom(
-        primary: isPrimary ? darkBlue : lightBlue,
-        onPrimary: Colors.white,
+        backgroundColor: isPrimary ? darkBlue : lightBlue,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
@@ -197,5 +212,4 @@ class _EditContentScreenState extends State<EditContentScreen> {
         elevation: isPrimary ? 4 : 2,
       ),
     );
-  }
-}
+  }}

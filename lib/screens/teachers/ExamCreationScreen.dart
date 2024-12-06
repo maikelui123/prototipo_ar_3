@@ -23,7 +23,6 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   }
 
   void _fetchStudentIds() async {
-    // Realizar la búsqueda en Firestore en la colección deseada
     var studentsSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('role', isEqualTo: 'alumno')
@@ -40,101 +39,113 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   Future<void> _saveExam() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Guardar en Firestore
       await FirebaseFirestore.instance.collection('exams').add({
         'title': _title,
         'description': _description,
         'dueDate': Timestamp.fromDate(_dueDate),
         'assignedTo': _assignedTo,
-        'createdBy': 'profesorId123', // Aquí deberías obtener el ID del profesor actual
+        'createdBy': 'profesorId123', // Obtener el ID del profesor actual
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         'criteria': _criteria,
         'status': 'abierta',
-        // 'grade' se inicializa vacío
       });
-      // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Examen guardado con éxito')));
-      // Regresar a la pantalla anterior o navegar a donde desees
       Navigator.pop(context);
     }
   }
 
+  void _previewExam() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Vista Previa del Examen'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('Título: $_title', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Descripción: $_description'),
+              Text('Fecha de entrega: ${_dueDate.toLocal()}'),
+              // Mostrar más detalles si es necesario
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cerrar'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    Color lightBlue = Colors.lightBlue.shade100;
+    Color darkBlue = Colors.blue.shade400;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Crear Examen/Tarea'),
+        backgroundColor: darkBlue,
       ),
-      body: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Título del examen/tarea'),
-                  validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
-                  onSaved: (value) => _title = value!,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Descripción'),
-                  validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
-                  onSaved: (value) => _description = value!,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Puntos por contenido'),
-                  validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
-                  onSaved: (value) => _criteria['contenido'] = value!,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Puntos por originalidad'),
-                  validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
-                  onSaved: (value) => _criteria['originalidad'] = value!,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Puntos por presentación'),
-                  validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
-                  onSaved: (value) => _criteria['presentación'] = value!,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    DatePicker.showDateTimePicker(
-                      context,
-                      showTitleActions: true,
-                      minTime: DateTime.now(),
-                      onConfirm: (date) {
-                        setState(() => _dueDate = date);
-                      },
-                      currentTime: _dueDate,
-                      locale: LocaleType.es, // Ajusta el idioma al español
-                    );
-                  },
-                  child: Text('Seleccionar fecha de entrega'),
-                ),
-                Wrap(
-                  children: _students.map((student) {
-                    return ChoiceChip(
-                      label: Text(student['name']), // Muestra el nombre del estudiante
-                      selected: _assignedTo.contains(student['id']),
-                      onSelected: (isSelected) {
-                        setState(() {
-                          if (isSelected) {
-                            _assignedTo.add(student['id']);
-                          } else {
-                            _assignedTo.removeWhere((id) => id == student['id']);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-                ElevatedButton(
-                  onPressed: _saveExam,
-                  child: Text('Guardar Examen/Tarea'),
-                ),
-              ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [lightBlue, darkBlue],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Título del examen/tarea'),
+                    validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
+                    onSaved: (value) => _title = value!,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Descripción'),
+                    validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
+                    onSaved: (value) => _description = value!,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Puntos por contenido'),
+                    validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
+                    onSaved: (value) => _criteria['contenido'] = value!,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Puntos por originalidad'),
+                    validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
+                    onSaved: (value) => _criteria['originalidad'] = value!,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Puntos por presentación'),
+                    validator: (value) => value!.isEmpty ? 'Este campo no puede estar vacío' : null,
+                    onSaved: (value) => _criteria['presentación'] = value!,
+                  ),
+                  ElevatedButton(
+                    onPressed: _previewExam,
+                    child: Text('Vista Previa del Examen'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: darkBlue,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _saveExam,
+                    child: Text('Guardar Examen/Tarea'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: darkBlue,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -142,6 +153,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _saveExam,
         child: Icon(Icons.save),
+        backgroundColor: darkBlue,
         tooltip: 'Guardar Examen/Tarea',
       ),
     );

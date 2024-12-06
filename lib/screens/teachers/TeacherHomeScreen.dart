@@ -1,69 +1,209 @@
+// screens/TeacherHomeScreen.dart
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class TeacherHomeScreen extends StatelessWidget {
-  final String welcomeMessage; // Campo para el mensaje de bienvenida
-
-  TeacherHomeScreen({Key? key, required this.welcomeMessage}) : super(key: key);
+  // Eliminamos el parámetro welcomeMessage
+  TeacherHomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Definir colores personalizados
-    Color lightBlue = Colors.lightBlue.shade100;
-    Color darkBlue = Colors.blue.shade400;
+    final Color primaryColor = Color(0xFF0D47A1); // Azul oscuro
+    final Color accentColor = Color(0xFF42A5F5); // Azul claro
+
+    // Obtener el usuario actual
+    final user = FirebaseAuth.instance.currentUser;
+    String firstName = '';
+    String lastName = '';
+
+    // Cargar datos del usuario
+    if (user != null) {
+      // Puedes utilizar un FutureBuilder o StreamBuilder para obtener los datos del usuario
+      // Aquí simplificamos asumiendo que ya tienes los datos disponibles
+      // Para una implementación completa, considera usar un StreamBuilder o FutureBuilder
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(welcomeMessage, style: TextStyle(color: lightBlue)),
-        backgroundColor: darkBlue,
+        title: Text(
+          'Inicio', // Título estático
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: primaryColor,
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.logout, color: lightBlue),
+            icon: Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Cerrar sesión',
             onPressed: () => _logout(context),
           ),
         ],
+        elevation: 4,
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [lightBlue, darkBlue],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [
+              accentColor.withOpacity(0.3),
+              primaryColor.withOpacity(0.7)
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: ListView(
-          padding: EdgeInsets.all(8.0),
-          children: ListTile.divideTiles(
-            context: context,
-            tiles: [
-              _serviceTile(context, 'Gestión de Contenidos', Icons.folder, '/contentList'),
-              _serviceTile(context, 'Crear Examen/Tarea', Icons.assignment, '/createExam'),
-              _serviceTile(context, 'Gestión de Alumnos', Icons.person, '/studentList'),
-              // Agrega más tiles según sea necesario
-            ],
-          ).toList(),
+        child: Column(
+          children: [
+            // Sección de perfil
+            Container(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage:
+                    AssetImage('assets/images/profile_placeholder.png'),
+                  ),
+                  SizedBox(width: 16),
+                  // Obtener y mostrar el nombre del profesor
+                  FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user?.uid)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(
+                          valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
+                        );
+                      }
+                      if (snapshot.hasError || !snapshot.hasData!) {
+                        return Text(
+                          'Profesor',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        );
+                      }
+                      var userData =
+                      snapshot.data!.data() as Map<String, dynamic>;
+                      firstName = userData['firstName'] ?? '';
+                      lastName = userData['lastName'] ?? '';
+                      return Text(
+                        'Profesor $firstName $lastName',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            // Botón de Mensajes
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/chatList');
+                },
+                icon: Icon(Icons.message, color: accentColor),
+                label: Text(
+                  'Mensajes',
+                  style: TextStyle(color: accentColor, fontSize: 16),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                  ),
+                  elevation: 5,
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            // Grid de opciones
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  children: <Widget>[
+                    _buildOptionCard(context, 'Gestión de Contenidos',
+                        Icons.folder, '/contentList', primaryColor),
+                    _buildOptionCard(context, 'Crear Examen/Tarea',
+                        Icons.assignment, '/createExam', primaryColor),
+                    _buildOptionCard(context, 'Gestión de Alumnos',
+                        Icons.person, '/studentList', primaryColor),
+                    _buildOptionCard(context, 'Gestión de Videos de YouTube',
+                        Icons.video_library, '/manageVideos', primaryColor),
+                    // Puedes añadir más tarjetas aquí si lo deseas
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+      // Opcional: Botón flotante para añadir nuevas tareas, contenidos, etc.
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Acción al presionar el botón
+          // Por ejemplo, navegar a una pantalla de creación rápida
+        },
+        backgroundColor: accentColor,
+        child: Icon(Icons.add),
+        tooltip: 'Añadir',
       ),
     );
   }
 
-  Widget _serviceTile(BuildContext context, String title, IconData icon, String route) {
+  Widget _buildOptionCard(BuildContext context, String title, IconData icon,
+      String route, Color color) {
     return Card(
-      elevation: 5, // Sombra para dar sensación de elevación
-      margin: EdgeInsets.all(10.0),
+      elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: ListTile(
-        leading: Icon(icon, size: 30.0, color: Colors.blue.shade600),
-        title: Text(title, style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        trailing: Icon(Icons.chevron_right, color: Colors.grey),
+      color: Colors.white.withOpacity(0.9),
+      child: InkWell(
         onTap: () {
-          if (title == 'Gestión de Contenidos') {
-            Navigator.of(context).pushNamed('/contentList');
-          } else {
-            Navigator.of(context).pushNamed(route);
-          }
+          Navigator.pushNamed(context, route);
         },
+        borderRadius: BorderRadius.circular(20),
+        splashColor: color.withOpacity(0.3),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 50, color: color),
+              SizedBox(height: 10),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -89,12 +229,12 @@ class TeacherHomeScreen extends StatelessWidget {
           ],
         );
       },
-    ) ?? false;
+    ) ??
+        false;
 
     if (shouldLogOut) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
     }
   }
 }
-
-

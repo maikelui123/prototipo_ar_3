@@ -5,43 +5,52 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Método para registrarse
   Future<String?> registrarConEmailYPassword(
       String email,
       String password,
       String role,
       String firstName,
       String lastName,
-      String phone
-      ) async {
+      String phone) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
-      // Comprueba que el objeto user no es null antes de acceder a uid
       User? user = userCredential.user;
       if (user != null) {
-        await _firestore.collection('users').doc(user.uid).set({
-          'email': email,
-          'role': role,
-          'firstName': firstName,
-          'lastName': lastName,
-          'phone': phone,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+        // Imprime los datos que se van a escribir en Firestore
+        print('Intentando escribir en Firestore con los siguientes datos:');
+        print('Email: $email');
+        print('Role: $role');
+        print('FirstName: $firstName');
+        print('LastName: $lastName');
+        print('Phone: $phone');
+
+        // Intentar escribir en Firestore
+        try {
+          await _firestore.collection('users').doc(user.uid).set({
+            'email': email,
+            'role': role,
+            'firstName': firstName,
+            'lastName': lastName,
+            'phone': phone,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          print('Datos del usuario guardados en Firestore correctamente.');
+        } catch (e) {
+          print('Error al escribir en Firestore: $e');
+          return 'Error al guardar los datos en Firestore: $e';
+        }
       } else {
-        // Manejar el caso en que el usuario es null
         return 'El usuario creado es nulo';
       }
 
-      return null; // Si no hay error, devuelve null
+      return null; // Registro exitoso
     } catch (e) {
       if (e is FirebaseAuthException) {
-        return e.message; // Devuelve el mensaje de error
+        return e.message;
       }
-      return 'Ocurrió un error desconocido'; // Para otros errores no específicos
+      return 'Ocurrió un error desconocido: $e';
     }
   }
 

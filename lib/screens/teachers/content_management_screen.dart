@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:lottie/lottie.dart';
 
 class ContentManagementScreen extends StatefulWidget {
   @override
@@ -104,6 +105,36 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
     }
   }
 
+  Widget _buildDecoratedTextField(TextEditingController controller, String label, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        validator: (value) => value != null && value.isNotEmpty ? null : 'Este campo es obligatorio',
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, VoidCallback onPressed, IconData icon, {bool isPrimary = false}) {
+    return ElevatedButton.icon(
+      icon: Icon(icon, color: isPrimary ? Colors.white : darkBlue),
+      label: Text(text),
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isPrimary ? darkBlue : lightBlue,
+        foregroundColor: isPrimary ? Colors.white : darkBlue,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,33 +150,32 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints viewportConstraints) {
-            return SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: viewportConstraints.maxHeight,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildTextField(_nombreController, 'Nombre del componente'),
-                      _buildTextField(_descripcionController, 'Descripción'),
-                      _buildTextField(_informacionModeloController, 'Información del Modelo'),
-                      _buildTextField(_keywordsController, 'Palabras Clave (separadas por comas)'),
-                      _buildImagePickerButton(),
-                      _buildModelPickerButton(),
-                      _buildSaveButton(),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildDecoratedTextField(_nombreController, 'Nombre del componente', Icons.text_fields),
+                _buildDecoratedTextField(_descripcionController, 'Descripción', Icons.description),
+                _buildDecoratedTextField(_informacionModeloController, 'Información del Modelo', Icons.info),
+                _buildDecoratedTextField(_keywordsController, 'Palabras Clave (separadas por comas)', Icons.key),
+                SizedBox(height: 20),
+                _imageFile != null
+                    ? Image.file(_imageFile!, fit: BoxFit.cover)
+                    : Container(),
+                _buildButton('Seleccionar imagen para el componente', _pickImage, Icons.image),
+                SizedBox(height: 20),
+                _modelFile != null
+                    ? Text('Modelo 3D seleccionado: ${_modelFile!.path.split('/').last}', style: TextStyle(color: Colors.white))
+                    : Container(),
+                _buildButton('Seleccionar modelo 3D para el componente', _pickModel, Icons.model_training),
+                SizedBox(height: 20),
+                _buildButton('Guardar Componente', _saveComponent, Icons.save, isPrimary: true),
+                Lottie.asset('assets/cubo.json', width: 200, height: 200),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -169,7 +199,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
     return ElevatedButton(
       onPressed: _pickImage,
       child: Text('Seleccionar imagen para el componente'),
-      style: ElevatedButton.styleFrom(primary: darkBlue),
+      style: ElevatedButton.styleFrom(backgroundColor: darkBlue),
     );
   }
 
@@ -177,7 +207,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
     return ElevatedButton(
       onPressed: _pickModel,
       child: Text('Seleccionar modelo 3D para el componente'),
-      style: ElevatedButton.styleFrom(primary: darkBlue),
+      style: ElevatedButton.styleFrom(backgroundColor: darkBlue),
     );
   }
 
@@ -185,7 +215,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
     return ElevatedButton(
       onPressed: _saveComponent,
       child: Text('Guardar Componente'),
-      style: ElevatedButton.styleFrom(primary: darkBlue),
+      style: ElevatedButton.styleFrom(backgroundColor: darkBlue),
     );
   }
 }
