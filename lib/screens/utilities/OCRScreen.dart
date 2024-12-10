@@ -3,10 +3,40 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '/services/ocr_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import necesario para obtener el userId
 import '../models/Model3DViewScreen.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// Función para registrar la actividad
+void logActivity(String userId, String screenName) async {
+  try {
+    // Obtener datos del usuario desde la colección 'users'
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (userDoc.exists) {
+      Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+      // Registrar la actividad con datos adicionales
+      await FirebaseFirestore.instance.collection('activity_logs').add({
+        'userId': userId,
+        'screenName': screenName,
+        'timestamp': FieldValue.serverTimestamp(),
+        'userName': userData?['firstName'] ?? 'Usuario desconocido',
+        'role': userData?['role'] ?? 'Sin rol',
+      });
+    } else {
+      print('El usuario no existe en la colección "users".');
+    }
+  } catch (e) {
+    print('Error registrando la actividad: $e');
+  }
+}
+
 
 class OCRScreen extends StatefulWidget {
   @override
@@ -24,6 +54,11 @@ class _OCRScreenState extends State<OCRScreen> {
   void initState() {
     super.initState();
     _initTts();
+    // Obtiene el usuario actual y registra su actividad
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      logActivity(user.uid, 'OCR'); // Registrar la visita a OCRScreen
+    }
   }
 
   void _initTts() {
@@ -41,13 +76,11 @@ class _OCRScreenState extends State<OCRScreen> {
 
   Future<void> _toggleSpeech(String text) async {
     if (isSpeaking) {
-      // Si ya se está reproduciendo, detener la voz
       await flutterTts.stop();
       setState(() {
         isSpeaking = false;
       });
     } else {
-      // Si no se está reproduciendo, iniciar la voz
       setState(() {
         isSpeaking = true;
       });
@@ -91,14 +124,12 @@ class _OCRScreenState extends State<OCRScreen> {
           .map((e) => e.toLowerCase())
           .toList();
 
-      // Buscar en Firestore las recomendaciones basadas en palabras clave
       var result = await FirebaseFirestore.instance
           .collection('componentesPC')
           .where('palabrasClave', arrayContainsAny: keywords)
           .get();
 
       if (result.docs.isNotEmpty) {
-        // Manejar los datos obtenidos y mostrar recomendaciones
         _showResultsDialog(result.docs);
       } else {
         _showNoResultsDialog();
@@ -115,11 +146,9 @@ class _OCRScreenState extends State<OCRScreen> {
   void _showResultsDialog(List<QueryDocumentSnapshot> docs) {
     List<Widget> recommendations = [];
 
-    // Procesar los resultados de Firestore
     docs.forEach((doc) {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-      // Agregar recomendaciones dinámicas
       recommendations.add(
         Card(
           margin: EdgeInsets.symmetric(vertical: 8),
@@ -137,7 +166,7 @@ class _OCRScreenState extends State<OCRScreen> {
             trailing: IconButton(
               icon: Icon(Icons.threed_rotation, color: Colors.blue),
               onPressed: () {
-                Navigator.of(context).pop(); // Cierra el diálogo actual
+                Navigator.of(context).pop(); // Cierra el diálogo
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => Model3DViewScreen(modelUrl: data['modelo3D_url']),
                 ));
@@ -148,7 +177,6 @@ class _OCRScreenState extends State<OCRScreen> {
       );
     });
 
-    // Mostrar los resultados en un diálogo
     showDialog(
       context: context,
       builder: (context) {
@@ -221,6 +249,12 @@ class _OCRScreenState extends State<OCRScreen> {
   }
 
   @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final Color customAppBarColor = Color(0xFF42F5EC);
     Color lightBlue = Colors.lightBlue.shade100;
@@ -231,13 +265,13 @@ class _OCRScreenState extends State<OCRScreen> {
         title: Text(
           'Reconocimiento de Texto (OCR)',
           style: TextStyle(
-            color: Colors.white, // Cambia el color del texto para mejor contraste
-            fontWeight: FontWeight.bold, // Hace el texto más grueso
-            fontSize: 20, // Aumenta el tamaño de la letra
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: customAppBarColor, // Usar el color personalizado
-        elevation: 10, // Añade sombra a la AppBar para un efecto 3D
+        backgroundColor: customAppBarColor,
+        elevation: 10,
       ),
       body: Container(
         width: double.infinity,
@@ -308,11 +342,5 @@ class _OCRScreenState extends State<OCRScreen> {
         child: Icon(Icons.volume_up),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    flutterTts.stop();
-    super.dispose();
   }
 }

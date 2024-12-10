@@ -1,9 +1,36 @@
-// screens/students/StudentVideoScreen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import necesario
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+
+// Función para registrar la actividad
+void logActivity(String userId, String screenName) async {
+  try {
+    // Obtener datos del usuario desde la colección 'users'
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (userDoc.exists) {
+      Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+      // Registrar la actividad con datos adicionales
+      await FirebaseFirestore.instance.collection('activity_logs').add({
+        'userId': userId,
+        'screenName': screenName,
+        'timestamp': FieldValue.serverTimestamp(),
+        'userName': userData?['firstName'] ?? 'Usuario desconocido',
+        'role': userData?['role'] ?? 'Sin rol',
+      });
+    } else {
+      print('El usuario no existe en la colección "users".');
+    }
+  } catch (e) {
+    print('Error registrando la actividad: $e');
+  }
+}
 
 class StudentVideoScreen extends StatefulWidget {
   @override
@@ -18,6 +45,12 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
   void initState() {
     super.initState();
     _initTts();
+
+    // Obtener el usuario actual y registrar la actividad
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      logActivity(user.uid, 'Video de Estudiante');
+    }
   }
 
   void _initTts() {
@@ -28,7 +61,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
 
     flutterTts.setCompletionHandler(() {
       setState(() {
-        isSpeaking = false; // Restablece el estado cuando la voz termina de reproducirse
+        isSpeaking = false;
       });
     });
 
@@ -44,13 +77,11 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
 
   Future<void> _toggleSpeech(String text) async {
     if (isSpeaking) {
-      // Si ya se está reproduciendo, detener la voz
       await flutterTts.stop();
       setState(() {
         isSpeaking = false;
       });
     } else {
-      // Si no se está reproduciendo, iniciar la voz
       setState(() {
         isSpeaking = true;
       });
@@ -132,8 +163,8 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
                     color: Colors.blue.shade700,
                   ),
                   textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis, // Agrega puntos suspensivos para texto largo
-                  maxLines: 2, // Limita a 2 líneas
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
                 SizedBox(height: 4),
                 Text(
@@ -151,7 +182,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
                   icon: Icon(Icons.play_circle_fill, color: Colors.white),
                   label: Text('Reproducir Video'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Color del botón
+                    backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -187,7 +218,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
         }
 
         return ListView.builder(
-          padding: EdgeInsets.only(bottom: 80), // Espacio para el FloatingActionButton
+          padding: EdgeInsets.only(bottom: 80),
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
             return _buildVideoCard(snapshot.data!.docs[index]);
@@ -200,14 +231,13 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
   @override
   Widget build(BuildContext context) {
     final Color customAppBarColor = Color(0xFF42F5EC);
-    final Color backgroundColor = Colors.white;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Videos Educativos',
           style: TextStyle(
-            color: Colors.white, // Mejor contraste
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -216,7 +246,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
         elevation: 10,
         centerTitle: true,
       ),
-      body: SafeArea( // Evita superposiciones con la barra de estado y otras áreas
+      body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,7 +22,8 @@ import 'screens/Messaging/ChatListScreen.dart';
 import 'screens/Messaging/ChatScreen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'screens/modules/ModulesScreen.dart';
-
+import 'screens/teachers/ActivityChartScreen.dart';
+import 'screens/teachers/ActivityPieChartScreen.dart';
 // Importa la pantalla de Política de Privacidad
 import 'screens/auth/PrivacyPolicyScreen.dart';
 
@@ -116,9 +115,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         '/foros': (context) => ForosScreen(), // Nueva ruta para ForosScreen
         '/crearForo': (context) => CrearForoScreen(), // Nueva ruta para CrearForoScreen
         '/chatList': (context) => ChatListScreen(), // Nueva ruta para ChatListScreen
-        // Añade la ruta para PrivacyPolicyScreen
         '/privacyPolicy': (context) => PrivacyPolicyScreen(),
-        // Eliminamos '/chatScreen' de las rutas fijas y lo manejamos en onGenerateRoute
+        '/activityChart': (context) => ActivityChartScreen(),
+        '/activityPieChart': (context) => ActivityPieChartScreen(),
       },
       onGenerateRoute: (settings) {
         // Manejo de rutas con argumentos

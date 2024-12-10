@@ -45,7 +45,7 @@ dependencies:
   cloud_firestore: ^5.5.1 # Para Firestore (base de datos)
   firebase_storage: ^12.3.7 # Para almacenamiento
   flutter_cube: ^0.1.1
-  path_provider: any
+  path_provider: ^2.1.5
   http: ^0.13.3
   permission_handler: ^11.0.1
   file_picker: ^6.1.1
@@ -61,6 +61,9 @@ dependencies:
   intl: ^0.17.0
   drag_and_drop_lists: ^0.4.1
   email_validator: ^2.0.1
+  fl_chart: ^0.69.2
+  connectivity_plus: ^6.1.0
+
 
 
 

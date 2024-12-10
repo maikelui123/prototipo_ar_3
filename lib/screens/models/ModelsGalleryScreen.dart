@@ -1,7 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import necesario
 import '../utilities/ARViewScreen.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+
+// Función para registrar la actividad (igual que en OCRScreen y ModelDetailScreen)
+void logActivity(String userId, String screenName) async {
+  try {
+    // Obtener datos del usuario desde la colección 'users'
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (userDoc.exists) {
+      Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+      // Registrar la actividad con datos adicionales
+      await FirebaseFirestore.instance.collection('activity_logs').add({
+        'userId': userId,
+        'screenName': screenName,
+        'timestamp': FieldValue.serverTimestamp(),
+        'userName': userData?['firstName'] ?? 'Usuario desconocido',
+        'role': userData?['role'] ?? 'Sin rol',
+      });
+    } else {
+      print('El usuario no existe en la colección "users".');
+    }
+  } catch (e) {
+    print('Error registrando la actividad: $e');
+  }
+}
 
 class ModelsGalleryScreen extends StatefulWidget {
   @override
@@ -17,6 +46,12 @@ class _ModelsGalleryScreenState extends State<ModelsGalleryScreen> {
   void initState() {
     super.initState();
     _initTts();
+
+    // Obtiene el usuario actual y registra su actividad
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      logActivity(user.uid, 'Galeria De Modelo'); // Registrar la visita
+    }
   }
 
   void _initTts() {
@@ -27,20 +62,18 @@ class _ModelsGalleryScreenState extends State<ModelsGalleryScreen> {
 
     flutterTts.setCompletionHandler(() {
       setState(() {
-        isSpeaking = false; // Restablece el estado cuando la voz termina de reproducirse
+        isSpeaking = false;
       });
     });
   }
 
   Future<void> _toggleSpeech(String text) async {
     if (isSpeaking) {
-      // Si ya se está reproduciendo, detener la voz
       await flutterTts.stop();
       setState(() {
         isSpeaking = false;
       });
     } else {
-      // Si no se está reproduciendo, iniciar la voz
       setState(() {
         isSpeaking = true;
       });
@@ -59,13 +92,13 @@ class _ModelsGalleryScreenState extends State<ModelsGalleryScreen> {
         title: Text(
           'Galería de Modelos 3D',
           style: TextStyle(
-            color: Colors.white, // Cambia el color del texto para mejor contraste
-            fontWeight: FontWeight.bold, // Hace el texto más grueso
-            fontSize: 20, // Aumenta el tamaño de la letra
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: customAppBarColor, // Usar el color personalizado
-        elevation: 10, // Añade sombra a la AppBar para un efecto 3D
+        backgroundColor: customAppBarColor,
+        elevation: 10,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -89,8 +122,8 @@ class _ModelsGalleryScreenState extends State<ModelsGalleryScreen> {
             return GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, // Número de columnas
-                crossAxisSpacing: 10, // Espaciado horizontal
-                mainAxisSpacing: 10, // Espaciado vertical
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
               ),
               itemCount: models.length,
               itemBuilder: (context, index) {

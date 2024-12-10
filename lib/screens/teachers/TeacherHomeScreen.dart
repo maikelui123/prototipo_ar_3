@@ -1,5 +1,3 @@
-// screens/TeacherHomeScreen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -151,6 +149,11 @@ class TeacherHomeScreen extends StatelessWidget {
                         Icons.person, '/studentList', primaryColor),
                     _buildOptionCard(context, 'Gestión de Videos de YouTube',
                         Icons.video_library, '/manageVideos', primaryColor),
+                    _buildOptionCard(context, 'Actividad de Alumnos',
+                        Icons.bar_chart, '/activityChart', primaryColor),
+                    _buildOptionCard(context, 'Gráfico Circular de Actividad',
+                      Icons.pie_chart, '/activityPieChart', primaryColor,
+                    ),
                     // Puedes añadir más tarjetas aquí si lo deseas
                   ],
                 ),
